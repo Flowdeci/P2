@@ -126,15 +126,14 @@ def ucb(node: MCTSNode, is_opponent: bool):
     Returns:
         The value of the UCB function for the given node
     """
-    
+    #Nodes that havent been visted yet need to be explored asap so they are given a "high value".
     if node.visits == 0:
-        return float('inf')  # Prioritize unexplored nodes.
+        return float('inf')  
 
-    # Exploitation term: win rate.
-    exploitation = node.wins / node.visits
-    # Exploration term: encourages exploring less-visited nodes.
+    # Calcuate the explotiation rate and exploration rate
     exploration = explore_faction * sqrt(log(node.parent.visits) / node.visits)
-
+    exploitation = node.wins / node.visits
+    
     # Adjust exploitation depending on whether it's the opponent's turn.
     return (1 - exploitation if is_opponent else exploitation) + exploration
 
@@ -147,7 +146,14 @@ def get_best_action(root_node: MCTSNode):
         action: The best action from the root node
     
     """
-    pass
+    
+    return max(
+        # Get the action with the highest number of visits
+        # Nodes with higher visit counts have been explored more thoroughly, 
+        # Meaning the algorithm has more data about their outcomes.
+        root_node.child_nodes.keys(),
+        key=lambda action: root_node.child_nodes[action].visits
+    )
 
 def is_win(board: Board, state, identity_of_bot: int):
     # checks if state is a win state for identity_of_bot
@@ -174,6 +180,20 @@ def think(board: Board, current_state):
 
         # Do MCTS - This is all you!
         # ...
+
+        # Selection: Traverse the tree to find a leaf node.
+        node, state = traverse_nodes(node, board, state, bot_identity)
+
+        # Expansion: Expand the leaf node if it has untried actions.
+        if node.untried_actions:
+            node, state = expand_leaf(node, board, state)
+
+        # Simulation: Simulate a random game from the new state.
+        terminal_state = rollout(board, state)
+
+        # Backpropagation: Update the tree with the result of the simulation.
+        won = is_win(board, terminal_state, bot_identity)
+        backpropagate(node, won)
 
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
