@@ -4,7 +4,7 @@ from random import choice
 from math import sqrt, log
 import random
 
-num_nodes = 1000
+num_nodes = 250
 explore_faction = 2.
 
 def traverse_nodes(node: MCTSNode, board: Board, state, bot_identity: int):
