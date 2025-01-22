@@ -1,10 +1,10 @@
-import random
 from mcts_node import MCTSNode
 from p2_t3 import Board
 from random import choice
 from math import sqrt, log
+import random
 
-num_nodes = 1000
+num_nodes = 100
 explore_faction = 2.
 
 def traverse_nodes(node: MCTSNode, board: Board, state, bot_identity: int):
@@ -73,86 +73,6 @@ def expand_leaf(node: MCTSNode, board: Board, state):
 
     return child_node, new_state
 
-def has_won_subboard(state, action, player):
-    # Extract the subboard location and the player's current positions in the subboard.
-    R, C, r, c = action
-    subboard_index = 2 * (3 * R + C) + (player - 1)  # Player-specific subboard index.
-    player_positions = state[subboard_index]
-
-    # Define the win conditions (rows, columns, diagonals) for a 3x3 subboard.
-    win_conditions = [
-        0b111000000,  # Row 1
-        0b000111000,  # Row 2
-        0b000000111,  # Row 3
-        0b100100100,  # Column 1
-        0b010010010,  # Column 2
-        0b001001001,  # Column 3
-        0b100010001,  # Diagonal 1
-        0b001010100,  # Diagonal 2
-    ]
-
-    # Check if the player's positions satisfy any win condition.
-    return any(player_positions & condition == condition for condition in win_conditions)
-
-
-def has_won_game(state, player):
-    # Get the player's positions on the meta-board.
-    player_boards = state[18 + (player - 1)]
-
-    # Define the win conditions for the meta-board (3x3 grid of subboards).
-    win_conditions = [
-        0b111000000,  # Row 1
-        0b000111000,  # Row 2
-        0b000000111,  # Row 3
-        0b100100100,  # Column 1
-        0b010010010,  # Column 2
-        0b001001001,  # Column 3
-        0b100010001,  # Diagonal 1
-        0b001010100,  # Diagonal 2
-    ]
-
-    # Check if the player's positions satisfy any win condition.
-    return any(player_boards & condition == condition for condition in win_conditions)
-
-
-def is_winning_move(board: Board, state, action):
-    # Simulate the next state after applying the action.
-    next_state = board.next_state(state, action)
-
-    # Get the player whose turn it is.
-    player = board.current_player(state)
-
-    # Check if the player has won the subboard or the game.
-    return has_won_subboard(next_state, action, player) or has_won_game(next_state, player)
-
-def is_blocking_move(board: Board, state, action):
-    # Simulate the next state after applying the action.
-    next_state = board.next_state(state, action)
-
-    # Get the opponent's player number.
-    opponent = 3 - board.current_player(state)
-
-    # Check if applying this action prevents the opponent from winning.
-    return any(
-        has_won_subboard(next_state, opp_action, opponent)
-        for opp_action in board.legal_actions(next_state)
-    )
-
-def heuristic_action(board: Board, state, legal_actions):
-    for action in legal_actions:
-        # Simulate the next state for this action.
-        state= board.next_state(state, action)
-        
-        # Check if this action wins the subboard for the current player.
-        if is_winning_move(board, state, action):
-            return action
-        
-        # Check if this action blocks the opponent from winning.
-        if is_blocking_move(board, state, action):
-            return action
-    
-    # If no critical moves are found, pick a random action (fallback).
-    return choice(legal_actions)
 
 
 def rollout(board: Board, state):
@@ -166,7 +86,6 @@ def rollout(board: Board, state):
         state: The terminal game state
 
     """
-    
     MAX_DEPTH = 5  # Limit the depth of rollouts
     depth = 0
     

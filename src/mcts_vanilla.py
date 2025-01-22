@@ -1,10 +1,10 @@
-
 from mcts_node import MCTSNode
 from p2_t3 import Board
 from random import choice
 from math import sqrt, log
+import random
 
-num_nodes = 100
+num_nodes = 1000
 explore_faction = 2.
 
 def traverse_nodes(node: MCTSNode, board: Board, state, bot_identity: int):
@@ -86,15 +86,20 @@ def rollout(board: Board, state):
         state: The terminal game state
 
     """
+    MAX_DEPTH = 5  # Limit the depth of rollouts
+    depth = 0
     
-    # Play the game randomly until it ends.
+    # Play the game randomly until it ends or the depth limit is reached.
+    while not board.is_ended(state) and depth < MAX_DEPTH:
+        action = random.choice(board.legal_actions(state))
+        state = board.next_state(state, action)
+        depth += 1
+
+    # Ensure the state is terminal before returning
     while not board.is_ended(state):
-        # Choose a random legal action, since we are rolling out the game. (later we will use the best action)
-        action = choice(board.legal_actions(state))
-        # Apply the action to get the next state.
+        action = random.choice(board.legal_actions(state))
         state = board.next_state(state, action)
 
-    # Return the terminal state.
     return state
 
 
